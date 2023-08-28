@@ -57,6 +57,12 @@ export async function mealsRoutes(app: FastifyInstance) {
         })
       }
 
+      if (meal.user_id !== request.user) {
+        return response.status(403).send({
+          error: 'Unauthorized.',
+        })
+      }
+
       const updateMealBodySchema = z.object({
         name: z.string(),
         description: z.string(),
