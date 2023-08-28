@@ -127,4 +127,27 @@ export async function mealsRoutes(app: FastifyInstance) {
       return response.send({ meals })
     },
   )
+
+  app.get<{ Params: IParams }>(
+    '/:id',
+    {
+      preHandler: [checkSessionIdExists, checkUserExists],
+    },
+    async (request, response) => {
+      const meal = await knex('meals').where('id', request.params.id).first()
+      if (!meal) {
+        return response.status(404).send({
+          error: 'Meal not found.',
+        })
+      }
+
+      if (meal.user_id !== request.user) {
+        return response.status(403).send({
+          error: 'Unauthorized.',
+        })
+      }
+
+      return response.send({ meal })
+    },
+  )
 }
