@@ -43,4 +43,45 @@ describe('Meals routes', () => {
       }),
     )
   })
+
+  it('should be able to update an existing meal', async () => {
+    const createUserResponse = await request(app.server).post('/users').send({
+      name: 'Fulano',
+      email: 'fulano@gmail.com',
+    })
+
+    const cookies = createUserResponse.get('Set-Cookie')
+
+    const doneAt = new Date().toISOString()
+
+    const createMealResponse = await request(app.server)
+      .post('/meals')
+      .set('Cookie', cookies)
+      .send({
+        name: 'Refeição 1',
+        description: 'Descrição da refeição 1',
+        doneAt,
+        withinDiet: true,
+      })
+
+    const updateMealResponse = await request(app.server)
+      .put(`/meals/${createMealResponse.body.meal.id}`)
+      .set('Cookie', cookies)
+      .send({
+        name: 'Refeição 2',
+        description: 'Descrição da refeição 2',
+        doneAt,
+        withinDiet: false,
+      })
+      .expect(200)
+
+    expect(updateMealResponse.body.meal).toEqual(
+      expect.objectContaining({
+        name: 'Refeição 2',
+        description: 'Descrição da refeição 2',
+        done_at: doneAt,
+        within_diet: 0,
+      }),
+    )
+  })
 })
