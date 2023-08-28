@@ -111,4 +111,37 @@ describe('Meals routes', () => {
       .send()
       .expect(204)
   })
+
+  it('should be able to list all meals from user', async () => {
+    const createUserResponse = await request(app.server).post('/users').send({
+      name: 'Fulano',
+      email: 'fulano@gmail.com',
+    })
+
+    const cookies = createUserResponse.get('Set-Cookie')
+
+    const doneAt = new Date().toISOString()
+
+    await request(app.server).post('/meals').set('Cookie', cookies).send({
+      name: 'Refeição 1',
+      description: 'Descrição da refeição 1',
+      doneAt,
+      withinDiet: true,
+    })
+
+    const listMealsResponse = await request(app.server)
+      .get('/meals')
+      .set('Cookie', cookies)
+      .send()
+      .expect(200)
+
+    expect(listMealsResponse.body.meals).toEqual([
+      expect.objectContaining({
+        name: 'Refeição 1',
+        description: 'Descrição da refeição 1',
+        done_at: doneAt,
+        within_diet: 1,
+      }),
+    ])
+  })
 })
