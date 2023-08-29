@@ -29,4 +29,37 @@ describe('Users routes', () => {
       }),
     )
   })
+
+  it('should be able to see his own metrics', async () => {
+    const createUserResponse = await request(app.server).post('/users').send({
+      name: 'Fulano',
+      email: 'fulano@gmail.com',
+    })
+
+    const cookies = createUserResponse.get('Set-Cookie')
+
+    for (let i = 1; i <= 10; i++) {
+      await request(app.server)
+        .post('/meals')
+        .set('Cookie', cookies)
+        .send({
+          name: `Refeição ${i}`,
+          description: `Descrição da refeição ${i}`,
+          doneAt: new Date().toISOString(),
+          withinDiet: i < 6,
+        })
+    }
+
+    const metricsResponse = await request(app.server)
+      .get('/users/metrics')
+      .set('Cookie', cookies)
+      .expect(200)
+
+    expect(metricsResponse.body.metrics).toEqual({
+      totalMeals: 10,
+      totalMealsWithinDiet: 5,
+      totalMealsOutsideDiet: 5,
+      bestSequenceWithinDiet: 5,
+    })
+  })
 })
